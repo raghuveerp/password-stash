@@ -1,13 +1,12 @@
-var express         = require('express');
-var router          = express.Router();
-var _               = require('lodash');
-var fs              = require("fs");
-var path            = require('path');
-var contents        = fs.readFileSync("./users.json");
-var users           = JSON.parse(contents);
-var userCounter     = 0;
-var passwordCounter = 0;
-var start           = new Date();
+var express     = require('express');
+var router      = express.Router();
+var _           = require('lodash');
+var fs          = require("fs");
+var path        = require('path');
+var contents    = fs.readFileSync("./users.json");
+var users       = JSON.parse(contents);
+var userCounter = 0;
+var start       = new Date();
 
 /**
  * @api {get} /users Get all users
@@ -48,16 +47,38 @@ router.get('/user', function (req, res, next) {
     if (result) {
         res.status(200).send(result);
     } else {
-        res.status(404).json({"error" : "No Results Found!"});
+        res.status(404).json({"error": "No Results Found!"});
+    }
+});
+
+router.post('/user', function (req, res) {
+    var username    = req.body.username,
+        password    = req.body.password,
+        name        = req.body.name,
+        description = req.body.desription || 'MFi User for some operation',
+        active      = req.body.active || true;
+
+    if (!username || !password || !name) {
+        res.status(404).json({"error": "required filed missing. Please make sure you have provided username, password and name for the account"});
     }
 
+    users.push({
+        "username": username,
+        "password": password,
+        "name": name,
+        "description": description,
+        "active": active
+    });
 
+    console.log(JSON.stringify(users));
+    fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+    res.end();
 });
 
 // Hidden easter egg
 router.get('/counter', function (req, res, next) {
     console.log('start time is: ' + start);
-    res.json({"UserCounter": userCounter, "PasswordCounter": passwordCounter, "processStartedOn": "" + start});
+    res.json({"UserCounter": userCounter, "processStartedOn": "" + start});
 });
 
 module.exports = router;
