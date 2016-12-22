@@ -1,84 +1,95 @@
-var express     = require('express');
-var router      = express.Router();
-var _           = require('lodash');
-var fs          = require("fs");
-var path        = require('path');
-var contents    = fs.readFileSync("./users.json");
-var users       = JSON.parse(contents);
-var userCounter = 0;
-var start       = new Date();
+var express    = require('express'),
+    bodyParser = require('body-parser'),
+    fs         = require("fs"),
+    contents   = fs.readFileSync("./users.json"),
+    users      = JSON.parse(contents),
+    _          = require('lodash'),
+    router     = express.Router();
 
-/**
- * @api {get} /users Get all users
- * @apiName GetAllUsers
- * @apiGroup User
- * @apiVersion 1.0.0
- * @apiDescription This API returns list of all the normal users along with one-liner of their access level.
- *
- * @apiPermission none
- */
-router.get('/users', function (req, res, next) {
-    userCounter++;
+
+router.get('/users', function (req, res) {
     res.status(200).json(users);
 });
 
-/**
- * @api {get} /user Throw error for no user
- * @apiName GetUserDetail
- * @apiGroup Password
- * @apiVersion 1.0.0
- * @apiDescription Throws error if username is not provided
- *
- * @apiErrorExample {json} Error-Response:
- *     HTTP/1.1 404 Not Found
- *     {
- *       "error": "UserNotFound"
- *     }
- *
- *  @apiPermission none
- */
-router.get('/user', function (req, res, next) {
-    userCounter++;
+router.get('/user', function (req, res) {
     var query = req.query;
-    console.log(query);
 
-    var result = _.find(users, query);
-
-    if (result) {
-        res.status(200).send(result);
+    if (_.isEmpty(query)) {
+        res.status(404).json({"error": "No Query Params found to filter results!"});
     } else {
-        res.status(404).json({"error": "No Results Found!"});
+        var result = _.find(users, query);
+        (result) ? res.status(200).send(result) : res.status(404).json({"error": "No Results Found!"});
     }
 });
 
-router.post('/user', function (req, res) {
+router.get('/user/:username', function (req, res) {
+    var username = req.params.username,
+        result   = _.find(users, {"username": username});
+
+    (result) ? res.status(200).send(result) : res.status(404).json({"error": "User " + username + " not found!"});
+
+});
+
+router.post('/user', bodyParser.json(), function (req, res) {
+    console.log('Body is: ' + JSON.stringify(req.body));
+
     var username    = req.body.username,
         password    = req.body.password,
         name        = req.body.name,
-        description = req.body.desription || 'MFi User for some operation',
-        active      = req.body.active || true;
+        description = req.body.desription || 'User for some operation',
+        active      = req.body.active || false;
 
     if (!username || !password || !name) {
-        res.status(404).json({"error": "required filed missing. Please make sure you have provided username, password and name for the account"});
+        res.status(404).json({"error": "Please make sure you have provided username, password and name for the account"});
     }
 
-    users.push({
-        "username": username,
-        "password": password,
-        "name": name,
-        "description": description,
-        "active": active
-    });
+    if (_.find(users, {"username": username})) {
+        res.status(404).json({"error": username + " already exists. Please choose a different unique username."});
+    } else {
+        users.push({
+            "username": username,
+            "password": password,
+            "name": name,
+            "description": description,
+            "active": active
+        });
 
-    console.log(JSON.stringify(users));
-    fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
-    res.end();
+        fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+        res.end('username \"' + username + '\" created successfully.');
+    }
 });
 
-// Hidden easter egg
-router.get('/counter', function (req, res, next) {
-    console.log('start time is: ' + start);
-    res.json({"UserCounter": userCounter, "processStartedOn": "" + start});
+router.put('/user/:username', bodyParser.json(), function (req, res) {
+    var username = req.params.username,
+        index    = _.findIndex(users, {"username": username}),
+        newValue;
+
+    if (!username) {
+        res.status(404).json({"error": "username not found in the request."});
+    }
+
+    if (index && index >= 0) {
+        newValue = {
+            "username": username,
+            "password": req.body.password || users[index].password,
+            "name": req.body.name || users[index].name,
+            "description": req.body.description || users[index].description,
+            "active": req.body.active || users[index].active || false
+        };
+
+        users.splice(index, 1, newValue);
+    } else {
+        newValue = req.body;
+        users.push(newValue)
+    }
+
+    fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+    res.end('username \"' + username + '\" updated successfully..');
+
+});
+
+router.put('/user', function (req, res) {
+
 });
 
 module.exports = router;
