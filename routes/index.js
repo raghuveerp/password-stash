@@ -6,6 +6,18 @@ var express    = require('express'),
     _          = require('lodash'),
     router     = express.Router();
 
+var checkAllProperties = function (input) {
+    var properties      = ['username', 'password', 'name', 'description', 'active'],
+        inputProperties = [];
+
+    for (var key in input) {
+        if (input.hasOwnProperty(key)) {
+            inputProperties.push(key);
+        }
+    }
+
+    return _.isEqual(properties.sort(), inputProperties.sort());
+};
 
 router.get('/users', function (req, res) {
     res.status(200).json(users);
@@ -79,8 +91,12 @@ router.put('/user/:username', bodyParser.json(), function (req, res) {
 
         users.splice(index, 1, newValue);
     } else {
-        newValue = req.body;
-        users.push(newValue)
+        if (checkAllProperties(req.body)) {
+            newValue = req.body;
+            users.push(newValue)
+        } else {
+            res.status(404).json({"error": "Please provide all the necessary fields."});
+        }
     }
 
     fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
