@@ -23,6 +23,14 @@ router.get('/users', function (req, res) {
     res.status(200).json(users);
 });
 
+router.get('/user/:username', function (req, res) {
+    var username = req.params.username,
+        result   = _.find(users, {"username": username});
+
+    (result) ? res.status(200).send(result) : res.status(404).json({"error": "User " + username + " not found!"});
+
+});
+
 router.get('/user', function (req, res) {
     var query = req.query;
 
@@ -32,14 +40,6 @@ router.get('/user', function (req, res) {
         var result = _.find(users, query);
         (result) ? res.status(200).send(result) : res.status(404).json({"error": "No Results Found!"});
     }
-});
-
-router.get('/user/:username', function (req, res) {
-    var username = req.params.username,
-        result   = _.find(users, {"username": username});
-
-    (result) ? res.status(200).send(result) : res.status(404).json({"error": "User " + username + " not found!"});
-
 });
 
 router.post('/user', bodyParser.json(), function (req, res) {
@@ -91,7 +91,7 @@ router.put('/user/:username', bodyParser.json(), function (req, res) {
 
         users.splice(index, 1, newValue);
     } else {
-        if (checkAllProperties(req.body)) {
+        if (checkAllProperties(req.body) && (req.body.username === username)) {
             newValue = req.body;
             users.push(newValue)
         } else {
