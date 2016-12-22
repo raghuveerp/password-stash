@@ -1,6 +1,6 @@
-# Password Vault Application
+# Password DB Application
 
-This application is very small node js based application which has GET APIs to return passwords.
+This application is very small Express and NodeJS based application for password management
 
 ## Pre Requisites
 
@@ -8,7 +8,6 @@ Following are the packages that needs to be installed on the host in order to ru
 
 * Node and NPM : https://nodejs.org/en/download/
 * Gulp : http://gulpjs.com/
-* APIDocJS : http://apidocjs.com/
 
 ## Building the Code
 
@@ -22,8 +21,3 @@ This project relies on Gulp for running locally so that all the latest changes d
 
 ``$ gulp``
 
-## Creating documents
-
-The documentation is done using apidocjs. In order to create documents, apidoc should be installed on the host. Please execute this command to generate documents.
-
-``$ apidoc -i routes/ -o docs/``

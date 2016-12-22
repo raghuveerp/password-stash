@@ -1,121 +1,111 @@
-var express         = require('express');
-var router          = express.Router();
-var _               = require('lodash');
-var fs              = require("fs");
-var path            = require('path');
-var contents        = fs.readFileSync("./users.json");
-var jsonContent     = JSON.parse(contents);
-var userCounter     = 0;
-var passwordCounter = 0;
-var start           = new Date();
+var express    = require('express'),
+    bodyParser = require('body-parser'),
+    fs         = require("fs"),
+    contents   = fs.readFileSync("./users.json"),
+    users      = JSON.parse(contents),
+    _          = require('lodash'),
+    router     = express.Router();
 
-/**
- * @api {get} /users Get all users
- * @apiName GetAllUsers
- * @apiGroup User
- * @apiVersion 1.0.0
- * @apiDescription This API returns list of all the normal users along with one-liner of their access level.
- *
- * @apiPermission none
- */
-router.get('/users', function (req, res, next) {
-    userCounter++;
-    var users = [];
+var checkAllProperties = function (input) {
+    var properties      = ['username', 'password', 'name', 'description', 'active'],
+        inputProperties = [];
 
-    _.forEach(jsonContent, function (obj) {
-        if (obj.active && !obj.admin) {
-            users.push({"name": obj.name, "username": obj.username, "description": obj.description});
+    for (var key in input) {
+        if (input.hasOwnProperty(key)) {
+            inputProperties.push(key);
         }
-    });
-
-    res.json(users);
-});
-
-/**
- * @api {get} /password Throw error for no user
- * @apiName GetUserErrorHandler
- * @apiGroup Password
- * @apiVersion 1.0.0
- * @apiDescription Throws error if username is not provided
- *
- * @apiErrorExample {json} Error-Response:
- *     HTTP/1.1 404 Not Found
- *     {
- *       "error": "UserNotFound"
- *     }
- *
- *  @apiPermission none
- */
-router.get('/password', function (req, res, next) {
-    res.status(404).json({"error": "username not found."});
-});
-
-/**
- * @api {get} /password/:user Get password for given user
- * @apiName GetPasswordForUser
- * @apiGroup Password
- * @apiVersion 1.0.0
- * @apiDescription This API returns the password of normal user or throws error for random user
- * @apiSuccess {String} password Password of the given user
- *
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *     {
- *       "password": "Password Text"
- *     }
- *
- * @apiErrorExample {json} Error-Response:
- *     HTTP/1.1 404 Not Found
- *     {
- *       "error": "UserNotFound"
- *     }
- *
- *  @apiPermission none
- */
-router.get('/password/:user', function (req, res, next) {
-    passwordCounter++;
-    var user = req.params.user;
-
-    if (user.match(/^:/)) {
-        user = user.slice(1, user.length);
     }
 
-    var userid = _.find(jsonContent, function (obj) {
-        if (obj.active) {
-            return obj.username === user ? obj : null;
-        }
-    });
+    return _.isEqual(properties.sort(), inputProperties.sort());
+};
 
-    (!userid || userid.length == 0) ?
-        res.status(404).json({"error": "UserNotFound"}) :
-        res.json({"password": userid.password});
+router.get('/users', function (req, res) {
+    res.status(200).json(users);
 });
 
-// Hidden easter egg
-router.get('/counter', function (req, res, next) {
-    console.log('start time is: ' + start);
-    res.json({"UserCounter": userCounter, "PasswordCounter": passwordCounter, "processStartedOn": "" + start});
+router.get('/user/:username', function (req, res) {
+    var username = req.params.username,
+        result   = _.find(users, {"username": username});
+
+    (result) ? res.status(200).send(result) : res.status(404).json({"error": "User " + username + " not found!"});
+
 });
 
-/**
- * @api {get} /passwords Get all Passwords
- * @apiName GetAllPasswords
- * @apiGroup Password
- * @apiVersion 1.0.0
- * @apiDescription Gets all the username/passwords combinations in one go
- * @apiPermission none
- */
-router.get('/passwords', function (req, res, next) {
-    passwordCounter++;
-    var users = [];
+router.get('/user', function (req, res) {
+    var query = req.query;
 
-    _.forEach(jsonContent, function (obj) {
-        if (obj.active) {
-            users.push({"username": obj.username, "password": obj.password});
+    if (_.isEmpty(query)) {
+        res.status(404).json({"error": "No Query Params found to filter results!"});
+    } else {
+        var result = _.find(users, query);
+        (result) ? res.status(200).send(result) : res.status(404).json({"error": "No Results Found!"});
+    }
+});
+
+router.post('/user', bodyParser.json(), function (req, res) {
+    console.log('Body is: ' + JSON.stringify(req.body));
+
+    var username    = req.body.username,
+        password    = req.body.password,
+        name        = req.body.name,
+        description = req.body.desription || 'User for some operation',
+        active      = req.body.active || false;
+
+    if (!username || !password || !name) {
+        res.status(404).json({"error": "Please make sure you have provided username, password and name for the account"});
+    }
+
+    if (_.find(users, {"username": username})) {
+        res.status(404).json({"error": username + " already exists. Please choose a different unique username."});
+    } else {
+        users.push({
+            "username": username,
+            "password": password,
+            "name": name,
+            "description": description,
+            "active": active
+        });
+
+        fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+        res.end('username \"' + username + '\" created successfully.');
+    }
+});
+
+router.put('/user/:username', bodyParser.json(), function (req, res) {
+    var username = req.params.username,
+        index    = _.findIndex(users, {"username": username}),
+        newValue;
+
+    if (!username) {
+        res.status(404).json({"error": "username not found in the request."});
+    }
+
+    if (index && index >= 0) {
+        newValue = {
+            "username": username,
+            "password": req.body.password || users[index].password,
+            "name": req.body.name || users[index].name,
+            "description": req.body.description || users[index].description,
+            "active": req.body.active || users[index].active || false
+        };
+
+        users.splice(index, 1, newValue);
+    } else {
+        if (checkAllProperties(req.body) && (req.body.username === username)) {
+            newValue = req.body;
+            users.push(newValue)
+        } else {
+            res.status(404).json({"error": "Please provide all the necessary fields."});
         }
-    });
+    }
 
-    res.json(users);
+    fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+    res.end('username \"' + username + '\" updated successfully..');
+
+});
+
+router.put('/user', function (req, res) {
+
 });
 
 module.exports = router;
