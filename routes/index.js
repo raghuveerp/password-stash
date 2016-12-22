@@ -2,7 +2,8 @@ var express    = require('express'),
     bodyParser = require('body-parser'),
     fs         = require("fs"),
     contents   = fs.readFileSync("./users.json"),
-    users      = JSON.parse(contents),
+    // users      = JSON.parse(contents),
+    userFile   = './users.json',
     _          = require('lodash'),
     router     = express.Router();
 
@@ -20,19 +21,24 @@ var checkAllProperties = function (input) {
 };
 
 router.get('/users', function (req, res) {
+    var users = JSON.parse(fs.readFileSync(userFile));
     res.status(200).json(users);
 });
 
 router.get('/user/:username', function (req, res) {
     var username = req.params.username,
+        users    = JSON.parse(fs.readFileSync(userFile)),
         result   = _.find(users, {"username": username});
 
-    (result) ? res.status(200).send(result) : res.status(404).json({"error": "User " + username + " not found!"});
+    (result)
+        ? res.status(200).send(result)
+        : res.status(404).json({"error": "User " + username + " not found!"});
 
 });
 
 router.get('/user', function (req, res) {
-    var query = req.query;
+    var query = req.query,
+        users = JSON.parse(fs.readFileSync(userFile));
 
     if (_.isEmpty(query)) {
         res.status(404).json({"error": "No Query Params found to filter results!"});
@@ -43,16 +49,15 @@ router.get('/user', function (req, res) {
 });
 
 router.post('/user', bodyParser.json(), function (req, res) {
-    console.log('Body is: ' + JSON.stringify(req.body));
-
     var username    = req.body.username,
         password    = req.body.password,
         name        = req.body.name,
         description = req.body.desription || 'User for some operation',
-        active      = req.body.active || false;
+        active      = req.body.active || false,
+        users       = JSON.parse(fs.readFileSync(userFile));
 
     if (!username || !password || !name) {
-        res.status(404).json({"error": "Please make sure you have provided username, password and name for the account"});
+        res.status(404).json({"error": "Please make sure you have provided mandatory fields"});
     }
 
     if (_.find(users, {"username": username})) {
@@ -66,13 +71,14 @@ router.post('/user', bodyParser.json(), function (req, res) {
             "active": active
         });
 
-        fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+        fs.writeFileSync(userFile, JSON.stringify(users, null, '\t'));
         res.end('username \"' + username + '\" created successfully.');
     }
 });
 
 router.put('/user/:username', bodyParser.json(), function (req, res) {
     var username = req.params.username,
+        users    = JSON.parse(fs.readFileSync(userFile)),
         index    = _.findIndex(users, {"username": username}),
         newValue;
 
@@ -99,13 +105,22 @@ router.put('/user/:username', bodyParser.json(), function (req, res) {
         }
     }
 
-    fs.writeFileSync("./users.json", JSON.stringify(users, null, '\t'));
+    fs.writeFileSync(userFile, JSON.stringify(users, null, '\t'));
     res.end('username \"' + username + '\" updated successfully..');
 
 });
 
-router.put('/user', function (req, res) {
+router.delete('/user/:username', function (req, res) {
+    var username = req.params.username,
+        users    = JSON.parse(fs.readFileSync(userFile));
 
+    if (!username) {
+        res.status(404).json({"error": "Please provide username to delete in the URL"});
+    } else {
+        users = _.reject(users, {"username": username});
+        fs.writeFileSync(userFile, JSON.stringify(users, null, '\t'));
+        res.end('Username: ' + username + ' deleted succussfully.');
+    }
 });
 
 module.exports = router;
