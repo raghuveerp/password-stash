@@ -20,6 +20,7 @@ var checkAllProperties = function (input) {
     return _.isEqual(properties.sort(), inputProperties.sort());
 };
 
+
 router.get('/users', function (req, res) {
     var users = JSON.parse(fs.readFileSync(userFile));
     res.status(200).json(users);
@@ -48,6 +49,20 @@ router.get('/user', function (req, res) {
     }
 });
 
+/**
+ * @api {post} /user Create a new User
+ * @apiVersion 1.0.0
+ * @apiName PostUser
+ * @apiGroup Users
+ * @apiPermission none
+ *
+ * @apiDescription In this case "apiErrorStructure" is defined and used.
+ * Define blocks with params that will be used in several functions, so you dont have to rewrite them.
+ *
+ * @apiParam {String} name Name of the User.
+ *
+ * @apiUse CreateUserError
+ */
 router.post('/user', bodyParser.json(), function (req, res) {
     var username    = req.body.username,
         password    = req.body.password,
@@ -76,6 +91,20 @@ router.post('/user', bodyParser.json(), function (req, res) {
     }
 });
 
+/**
+ * @api {put} /user/:username Change a User
+ * @apiVersion 1.0.0
+ * @apiName PutUser
+ * @apiGroup Users
+ * @apiPermission none
+ *
+ * @apiDescription This function is used to update an existing user. This function has same errors like POST /user,
+ * but errors not defined again, they were included with "apiErrorStructure"
+ *
+ * @apiParam {String} name Name of the User.
+ *
+ * @apiUse CreateUserError
+ */
 router.put('/user/:username', bodyParser.json(), function (req, res) {
     var username = req.params.username,
         users    = JSON.parse(fs.readFileSync(userFile)),
