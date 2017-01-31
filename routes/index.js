@@ -1,26 +1,9 @@
 var express    = require('express'),
     bodyParser = require('body-parser'),
     fs         = require("fs"),
-    contents   = fs.readFileSync("./users.json"),
-    // users      = JSON.parse(contents),
-    userFile   = './users.json',
+    userFile   = './data/users.json',
     _          = require('lodash'),
     router     = express.Router();
-
-/**
- * @apiDefine CreateUserError
- * @apiVersion 0.1.0
- *
- * @apiError NoAccessRight Only authenticated Admins can access the data.
- * @apiError UserNameTooShort Minimum of 5 characters required.
- *
- * @apiErrorExample  Response (example):
- *     HTTP/1.1 400 Bad Request
- *     {
- *       "error": "NoAccessRight"
- *     }
- */
-
 
 
 var checkAllProperties = function (input) {
@@ -65,20 +48,6 @@ router.get('/user', function (req, res) {
     }
 });
 
-/**
- * @api {post} /user Create a new User
- * @apiVersion 1.0.0
- * @apiName PostUser
- * @apiGroup Users
- * @apiPermission none
- *
- * @apiDescription In this case "apiErrorStructure" is defined and used.
- * Define blocks with params that will be used in several functions, so you dont have to rewrite them.
- *
- * @apiParam {String} name Name of the User.
- *
- * @apiUse CreateUserError
- */
 router.post('/user', bodyParser.json(), function (req, res) {
     var username    = req.body.username,
         password    = req.body.password,
@@ -107,20 +76,6 @@ router.post('/user', bodyParser.json(), function (req, res) {
     }
 });
 
-/**
- * @api {put} /user/:username Change a User
- * @apiVersion 1.0.0
- * @apiName PutUser
- * @apiGroup Users
- * @apiPermission none
- *
- * @apiDescription This function is used to update an existing user. This function has same errors like POST /user,
- * but errors not defined again, they were included with "apiErrorStructure"
- *
- * @apiParam {String} name Name of the User.
- *
- * @apiUse CreateUserError
- */
 router.put('/user/:username', bodyParser.json(), function (req, res) {
     var username = req.params.username,
         users    = JSON.parse(fs.readFileSync(userFile)),
