@@ -1,0 +1,305 @@
+FORMAT: 1A
+HOST: https://api.example.com
+
+# User DB
+
+User DB is a small Node.js based application. The intent of this application is to learn creating a REST based application
+using Node.js. The application is creating with 2 functionalities in mind.
+
+1. APIs - APIs to perform common CRUD Operations
+2. UI - A very simple UI to perform CRUD Operations using the APIs
+
+## Pre Requisites
+
+In order to develop, edit and run the application locally, you need to have couple of things already installed on your
+local machine. Please download and install below mentioned applications/packages:
+
+1. [Node.js](https://nodejs.org/en/download/) - Required to run the application
+2. [Gulp](http://gulpjs.com/) - To build and deploy the application
+3. [Aglio](https://github.com/danielgtaylor/aglio) - To create API documentation
+
+To run application, change to the directory and run the following command
+
+```no-highlight
+$ gulp
+```
+
+To generate the API documents, make changes to documentation.apid file and run the following command
+
+```no-highlight
+$ aglio --theme-variables slate -i documentation.apib -o index.html
+```
+
+## Dashboard
+
+
+# Data Structures
+
+## NoteData
++ id: 1 (required, number) - Unique identifier
++ title: Grocery list (required) - Single line description
++ body: Buy milk - Full description of the note which supports Markdown.
+
+## NoteList (array)
++ (NoteData)
+
+# Group Notes
+Group description (also with *Markdown*)
+
+## Important Info
+Descriptions may also contain sub-headings and **more Markdown**.
+
+## Note List [/notes]
+Note list description
+
++ Even
++ More
++ Markdown
+
+### Get Notes [GET]
+Get a list of notes.
+
++ Response 200 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Attributes (NoteList)
+
+### Create New Note [POST]
+Create a new note using a title and an optional content body.
+
++ Request with body (application/json)
+
+    + Body
+
+            {
+                "title": "My new note",
+                "body": "This is the body"
+            }
+
++ Response 201
+
++ Response 400 (application/json)
+
+    + Body
+
+            {
+                "error": "Invalid title"
+            }
+
++ Request without body (application/json)
+
+    + Body
+
+            {
+                "title": "My new note"
+            }
+
++ Response 201
+
++ Response 400 (application/json)
+
+    + Body
+
+            {
+                "error": "Invalid title"
+            }
+
+## Note [/notes/{id}{?body}]
+Note description
+
++ Parameters
+
+    + id: `68a5sdf67` (required, string) - The note ID
+
+### Get Note [GET]
+Get a single note.
+
++ Parameters
+
+    + body: `false` (boolean) - Set to `false` to exclude note body content.
+
++ Response 200 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Attributes (NoteData)
+
++ Response 404 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Body
+
+            {
+                "error": "Note not found"
+            }
+
+### Update a Note [PUT]
+Update a single note by setting the title and/or body.
+
+::: warning
+#### <i class="fa fa-warning"></i> Caution
+If the value for `title` or `body` is `null` or `undefined`, then the corresponding value is not modified on the server. However, if you send an empty string instead then it will **permanently overwrite** the original value.
+:::
+
++ Request (application/json)
+
+    + Body
+
+            {
+                "title": "Grocery List (Safeway)"
+            }
+
++ Response 200 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Attributes (NoteData)
+
++ Response 404 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Body
+
+            {
+                "error": "Note not found"
+            }
+
++ Request delete body (application/json)
+
+    + Body
+
+            {
+                "body": ""
+            }
+
++ Response 200 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Attributes (NoteData)
+
++ Response 404 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Body
+
+            {
+                "error": "Note not found"
+            }
+
+### Delete a Note [DELETE]
+Delete a single note
+
++ Response 204
+
++ Response 404 (application/json)
+
+    + Headers
+
+            X-Request-ID: f72fc914
+            X-Response-Time: 4ms
+
+    + Body
+
+            {
+                "error": "Note not found"
+            }
+
+# Group Users
+Group description
+
+## User List [/users{?name,joinedBefore,joinedAfter,sort,limit}]
+A list of users
+
++ Parameters
+
+    + name: `alice` (string, optional) - Search for a user by name
+    + joinedBefore: `2011-01-01` (string, optional) - Search by join date
+    + joinedAfter: `2011-01-01` (string, optional, ) - Search by join date
+    + sort: `joined` (string, optional) - Which field to sort by
+        + Default: `name`
+        + Members
+            + `name`
+            + `joined`
+            + `-joined`
+            + `age`
+            + `-age`
+            + `location`
+            + `-location`
+            + `plan`
+            + `-plan`
+    + limit: `25` (integer, optional) - The maximum number of users to return, up to `50`
+      + Default: `10`
+
+### Get users [GET]
+Get a list of users. Example:
+
+```no-highlight
+https://api.mywebsite.com/users?sort=joined&limit=5
+```
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "name": "alice",
+                    "image": "http://example.com/alice.jpg",
+                    "joined": "2013-11-01"
+                },
+                {
+                    "name": "bob",
+                    "image": "http://example.com/bob.jpg",
+                    "joined": "2013-11-02"
+                }
+            ]
+
+    + Schema
+
+
+
+# Group Tags and Tagging Long Title
+Get or set tags on notes
+
+## GET /tags
+Get a list of bars
+
++ Response 200 (application/json)
+
+        ["tag1", "tag2", "tag3"]
+
+## Get one tag [/tags/{id}]
+Get a single tag
+
++ Parameters
+    + id - Unique tag identifier
+
+### GET
+
++ Response 200
