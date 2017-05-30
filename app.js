@@ -1,14 +1,13 @@
-var express       = require('express'),
-    bodyParser    = require('body-parser'),
-    logger        = require('morgan'),
-    cookieParser  = require('cookie-parser'),
-    sss           = require('simple-stats-server'),
-    path          = require('path'),
-    _             = require('lodash'),
-    fs            = require("fs"),
-    stats         = sss(),
-    passwordFile  = __dirname + '/data/passwords.json',
-    passwordsData = JSON.parse(fs.readFileSync(passwordFile));
+var express      = require('express'),
+    bodyParser   = require('body-parser'),
+    logger       = require('morgan'),
+    cookieParser = require('cookie-parser'),
+    sss          = require('simple-stats-server'),
+    path         = require('path'),
+    _            = require('lodash'),
+    fs           = require("fs"),
+    stats        = sss(),
+    passwordFile = __dirname + '/data/passwords.json';
 
 var app = express();
 
@@ -16,7 +15,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(logger('combined    '));
+app.use(logger('combined'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
@@ -39,12 +38,14 @@ app.get('/', function (req, res, next) {
 });
 
 app.get('/passwords', function (req, res) {
+    var passwordsData = JSON.parse(fs.readFileSync(passwordFile));
     return res.status(200).json(passwordsData);
 });
 
 app.get('/password/:username', function (req, res) {
-    var username = req.params.username,
-        result   = _.find(passwordsData, {"username": username});
+    var username      = req.params.username,
+        passwordsData = JSON.parse(fs.readFileSync(passwordFile)),
+        result        = _.find(passwordsData, {"username": username});
 
     (result)
         ? res.status(200).send(result)
@@ -53,7 +54,8 @@ app.get('/password/:username', function (req, res) {
 });
 
 app.get('/password', function (req, res) {
-    var query = req.query;
+    var query         = req.query,
+        passwordsData = JSON.parse(fs.readFileSync(passwordFile));
 
     if (_.isEmpty(query)) {
         res.status(404).json({"error": "No Query Params found to filter results!"});
@@ -64,11 +66,12 @@ app.get('/password', function (req, res) {
 });
 
 app.post('/password', bodyParser.json(), function (req, res) {
-    var username    = req.body.username,
-        password    = req.body.password,
-        name        = req.body.name,
-        description = req.body.desription || 'User for some operation',
-        active      = req.body.active || false;
+    var username      = req.body.username,
+        password      = req.body.password,
+        name          = req.body.name,
+        description   = req.body.desription || 'User for some operation',
+        active        = req.body.active || false;
+    var passwordsData = JSON.parse(fs.readFileSync(passwordFile));
 
     if (!username || !password || !name) {
         res.status(404).json({"error": "Please make sure you have provided mandatory fields"});
@@ -91,16 +94,10 @@ app.post('/password', bodyParser.json(), function (req, res) {
 });
 
 app.put('/password/:username', bodyParser.json(), function (req, res) {
-    var username = req.params.username,
-        index    = _.findIndex(passwordsData, {"username": username}),
-        newValue;
-
-    if (!username) {
-        res.status(404).json({"error": "username not found in the request."});
-    }
-
-    if (index && index >= 0) {
-        newValue = {
+    var username      = req.params.username,
+        passwordsData = JSON.parse(fs.readFileSync(passwordFile)),
+        index         = _.findIndex(passwordsData, {"username": username}),
+        newValue      = {
             "username": username,
             "password": req.body.password || passwordsData[index].password,
             "name": req.body.name || passwordsData[index].name,
@@ -108,23 +105,21 @@ app.put('/password/:username', bodyParser.json(), function (req, res) {
             "active": req.body.active || passwordsData[index].active || false
         };
 
-        passwordsData.splice(index, 1, newValue);
-    } else {
-        if (checkAllProperties(req.body) && (req.body.username === username)) {
-            newValue = req.body;
-            passwordsData.push(newValue)
-        } else {
-            res.status(404).json({"error": "Please provide all the necessary fields."});
-        }
+    if (!username) {
+        res.status(404).json({"error": "username not found in the request."});
     }
+
+    (index >= 0)
+        ? passwordsData.splice(index, 1, newValue)
+        : res.status(404).json({"error": "username not found to be updated."});
 
     fs.writeFileSync(passwordFile, JSON.stringify(passwordsData, null, '\t'));
     res.end('username \"' + username + '\" updated successfully..');
-
 });
 
 app.delete('/password/:username', function (req, res) {
-    var username = req.params.username;
+    var username      = req.params.username,
+        passwordsData = JSON.parse(fs.readFileSync(passwordFile));
 
     if (!username) {
         res.status(404).json({"error": "Please provide username to delete in the URL"});
@@ -135,15 +130,7 @@ app.delete('/password/:username', function (req, res) {
     }
 });
 
-// app.use('/api', routes);
 app.use('/stats', stats);
-
-// catch 404 and forward to error handler
-// app.use(function (req, res, next) {
-//     var err    = new Error('Not Found');
-//     err.status = 404;
-//     next(err);
-// });
 
 app.use(function (err, req, res, next) {
     console.error(err.stack);
