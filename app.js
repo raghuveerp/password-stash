@@ -20,17 +20,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 
-var checkAllProperties = function (input) {
-    var properties      = ['username', 'password', 'name', 'description', 'active'],
-        inputProperties = [];
-
-    for (var key in input) {
-        if (input.hasOwnProperty(key)) {
-            inputProperties.push(key);
-        }
-    }
-    return _.isEqual(properties.sort(), inputProperties.sort());
-};
+app.use('/js', express.static(__dirname + '/views/javascript'));
+app.use('/css', express.static(__dirname + '/views/stylesheets'));
+app.use('/fonts', express.static(__dirname + '/node_modules/font-awesome/css')); // redirect fonts bootstrap
+app.use('/fonts', express.static(__dirname + '/node_modules/font-awesome/fonts')); // redirect fonts bootstrap
 
 // app.use('/', express.static(__dirname + '/docs'));
 app.get('/', function (req, res, next) {

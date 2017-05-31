@@ -14,6 +14,7 @@
     <meta name="description" content="Password Stash: A NodeJS based application to learn REST operations.">
     <meta name="author" content="Raghuveer Phull">
     
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="/fonts/font-awesome.css">
     
     <!-- Bootstrap Core CSS -->
@@ -31,22 +32,22 @@
 
 </head>
 
-<body id="wine" data-spy="scroll" data-target=".navbar-fixed-top">
+<body id="stash" data-spy="scroll" data-target=".navbar-fixed-top">
     
     <!-- Navigation -->
-    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="container">
             <div class="navbar-header page-scroll">
-                <a class="navbar-brand page-scroll" href="#wine">Password Stash</a>
+                <a class="navbar-brand page-scroll" href="#stash">Password Stash</a>
             </div>
             
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse navbar-ex1-collapse">
                 <ul class="nav navbar-nav">
                     <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
-                    <li class="hidden"><a class="page-scroll" href="#wine"></a></li>
+                    <li class="hidden"><a class="page-scroll" href="#home"></a></li>
                     <li><a class="page-scroll" href="#create">Create</a></li>
-                    <li><a class="page-scroll" href="#read">Retrieve</a></li>
+                    <li><a class="page-scroll" href="#retrieve">Retrieve</a></li>
                     <li><a class="page-scroll" href="#update">Update</a></li>
                     <li><a class="page-scroll" href="#delete">Delete</a></li>
                 </ul>
@@ -56,8 +57,8 @@
         <!-- /.container -->
     </nav>
     
-    <!-- Intro Section -->
-    <section id="intro" class="intro-section">
+    <!-- API Documentation Home Screen Section -->
+    <section id="home">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -67,8 +68,8 @@
         </div>
     </section>
     
-    <!-- About Section -->
-    <section id="Radar" class="about-section">
+    <!-- Create Section -->
+    <section id="create">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -78,8 +79,8 @@
         </div>
     </section>
     
-    <!-- Services Section -->
-    <section id="DevOps" class="services-section">
+    <!-- Retrieve Section -->
+    <section id="retrieve">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12"></div>
@@ -87,8 +88,17 @@
         </div>
     </section>
     
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
+    <!-- Update Section -->
+    <section id="update">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12"></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Delete Section -->
+    <section id="delete">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12"></div>
@@ -101,10 +111,6 @@
     
     <!-- Bootstrap Core JavaScript -->
     <script src="/js/bootstrap.min.js"></script>
-    
-    <!-- Scrolling Nav JavaScript -->
-    <script src="/js/jquery.easing.min.js"></script>
-    <script src="/js/scrolling-nav.js"></script>
 
 </body>
 </html>
